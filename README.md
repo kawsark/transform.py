@@ -55,10 +55,10 @@ vault write transform/transformation/azure \
 vault write transform/role/azure_role transformations=azure
 ```
 
-- Use transform.py to transform `az` outputs
+- Use transform.py to transform `az` outputs. 
 ```
 $ git clone https://github.com/kawsark/transform.py.git && cd transform.py
-$ az account list | python3 transform.py -v -t
+$ az account list | python3 transform.py -t
  {
     "cloudName": "AzureCloud",
     "homeTenantId": "vault:fpe:jkqyhelg-1j6p-b1aw-lqru-x04xd45f69q3",
@@ -80,7 +80,63 @@ $ az account list | python3 transform.py -v -t
       "type": "user"
     }
   }
+... <remaining output omitted>
 ```
 
 ### Usage - decoding example
-Pending
+To decode a previously encoded outputs, please save the encoded output above into a file (E.g. az.txt). then run the same process with the `-d` parameter as shown below.
+```
+$ az account list | python3 transform.py -t > az.txt
+$ cat az.txt | python3 transform.py -d
+... <output omitted>
+```
+
+### Verbose mode
+The `-v` parameter can be used to enable verbose mode and show the underlying vault commands, as well as indicate how many times an encoding or decoding operation took place:
+```
+$ az account list | python3 transform.py -v -t
+DEBUG: Enabled transform
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
+DEBUG: Encoded 18 times
+...<remaining output omitted>
+
+$ cat az.txt | python3 transform.py -d -v
+DEBUG: Enabled decode
+DEBUG: vault write -format=json transform/decode/local value=t1mwirk8-g9pv-tm6v-c9fz-vqar3c2ucvzn transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=14fh6g3q-jtso-ebd2-01oh-1a1xm9phb8jp transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=kyal0fgl-zbpl-avqj-yw98-gvtb494ntfb3 transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=yu6m6hww-cvzi-vdfm-x73p-u2zhqjfkq3ck transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=yu6m6hww-cvzi-vdfm-x73p-u2zhqjfkq3ck transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=7f1j1gop-ymav-c6i8-untu-vk2w8hvek6df transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=m7qemial-wm8r-jcy2-6xqc-vbvile14cpck transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=yu6m6hww-cvzi-vdfm-x73p-u2zhqjfkq3ck transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=pntypy5w-m6xi-g2a3-y7i7-lfdurgooworq transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=yu6m6hww-cvzi-vdfm-x73p-u2zhqjfkq3ck transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=yu6m6hww-cvzi-vdfm-x73p-u2zhqjfkq3ck transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=8a4kij3a-jvcx-vin6-pbm0-ho9gexwdv6qg transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=m7qemial-wm8r-jcy2-6xqc-vbvile14cpck transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=sfy66yab-0zcm-5ro5-d779-ujmq3y27hdnj transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=yu6m6hww-cvzi-vdfm-x73p-u2zhqjfkq3ck transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=yu6m6hww-cvzi-vdfm-x73p-u2zhqjfkq3ck transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=go3wazrl-c7ql-13pd-5ech-hnydcy5ldemp transformation=azure
+DEBUG: vault write -format=json transform/decode/local value=yu6m6hww-cvzi-vdfm-x73p-u2zhqjfkq3ck transformation=azure
+DEBUG: Decoded 18 times
+...<remaining output omitted>
+```
