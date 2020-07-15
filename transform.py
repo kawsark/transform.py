@@ -29,7 +29,7 @@ encode_cmd = os.getenv('ENCODE_CMD',"vault write -format=json transform/encode/l
 # Decode command
 decode_cmd = os.getenv('DECODE_CMD',"vault write -format=json transform/decode/local value={0} transformation=azure")
 
-# search regex
+# search regex for Azure
 regex = os.getenv('REGEX',default="([a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+)")
 
 def main():

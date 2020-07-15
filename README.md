@@ -1,7 +1,10 @@
 # transform.py
 A wrapper for the HashiCorp Vault transform secrets engine
 
-This repository is a wrapper around the [Vault Transform Secrets Engine](https://www.vaultproject.io/docs/secrets/transform) to transform sensitive values such as credentials or account IDs when performing demos. Below is an example for Azure. All the values prefixed with `vault:fpe:` have been transformed using Vault Format Preserving Encryption ([blog post](https://medium.com/hashicorp-engineering/advanced-data-protection-with-hashicorp-vault-96839b6b22af)).
+This repository is a wrapper around the [Vault Transform Secrets Engine](https://www.vaultproject.io/docs/secrets/transform) to transform sensitive values such as credentials or account IDs when performing demos. Below is an example for Azure. All the values prefixed with `vault:fpe:` have been transformed using Vault Format Preserving Encryption.
+
+A few Azure examples are shown below, other examples coming soon.
+
 ```
 $ az account list | python3 transform.py -v -t
  {
@@ -89,6 +92,17 @@ To decode a previously encoded outputs, please save the encoded output above int
 $ az account list | python3 transform.py -t > az.txt
 $ cat az.txt | python3 transform.py -d
 ... <output omitted>
+```
+
+### Bash functions
+To encode or decode individual fields, you can use the handy bash functions in bash_functions.sh. Examples shown below:
+```
+source bash_functions.sh
+$ az_encode 8mh6dgj5-xhjy-y6vh-mxa3-t1fegorvoiqk
+k8dzlity-11nc-f4pd-dss2-w6yi6s5rzobz
+
+$ az_decode k8dzlity-11nc-f4pd-dss2-w6yi6s5rzobz
+8mh6dgj5-xhjy-y6vh-mxa3-t1fegorvoiqk
 ```
 
 ### Verbose mode
