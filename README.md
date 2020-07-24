@@ -125,7 +125,6 @@ secret_key         vault:fpe:WSTvUzZG5h9lzPqc9DubndXX1y/z92cuE5FP2YD+
 security_token     <nil>
 ```
 
-
 ### Usage - decoding example
 Note: Decoding is not supported for AWS yet.
 To decode previously encoded outputs, please save the encoded output above into a file (E.g. az.txt). then run the same process with the `-d` parameter as shown below.
@@ -133,6 +132,22 @@ To decode previously encoded outputs, please save the encoded output above into 
 $ az account list | python3 transform.py -az > az.txt
 $ cat az.txt | python3 transform.py -d
 ... <output omitted>
+```
+
+### Masking example
+To mask credentials, modify the transformation to be of type `type=masking` as shown below:
+```
+vault delete transform/role/aws-role transformations=aws
+
+vault delete transform/transformation/aws
+
+vault write transform/transformation/aws \
+        type=masking \
+        template=aws_template \
+        masking_character=# \
+        allowed_roles='aws-role'
+
+vault write transform/role/aws-role transformations=aws
 ```
 
 ### Bash functions

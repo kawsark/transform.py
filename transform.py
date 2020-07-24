@@ -158,7 +158,7 @@ def decode_str(m):
     
     process = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     stdout, stderr = process.communicate()
-    error = False;
+    error = False
     
     if process.returncode == 0:
         j = json.loads(stdout)
