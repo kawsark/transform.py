@@ -1,10 +1,9 @@
 # transform.py
 A wrapper for the HashiCorp Vault transform secrets engine
 
-This repository is a wrapper around the [Vault Transform Secrets Engine](https://www.vaultproject.io/docs/secrets/transform) to transform sensitive values such as credentials or account IDs when performing demos. Below is an example for Azure. All the values prefixed with `vault:fpe:` have been transformed using Vault Format Preserving Encryption.
+This repository is a wrapper around the [Vault Transform Secrets Engine](https://www.vaultproject.io/docs/secrets/transform) to transform sensitive values such as credentials or account IDs when performing demos. Below is an example for Azure. All the values prefixed with `vault:fpe:` have been transformed using Vault Format Preserving Encryption. 
 
-A few Azure examples are shown below, other examples coming soon.
-
+Example output:
 ```
 $ az account list | python3 transform.py -v -t
  {
@@ -30,13 +29,14 @@ $ az account list | python3 transform.py -v -t
   }
 ```
 
-### Usage - encoding example
+### Running Vault
 - Please download and unzip a Vault binary with minimum version 1.4 with the `+ent` suffix. These are available for download at [releases page](https://releases.hashicorp.com/vault/). Start the Vault server in dev mode on one terminal.
 ```
 vault server -dev
 ```
+- Note: The Transform Secrets Engine is an Enterprise feature, therefore a valid Enterprise license will need to be applied to run a server beyond the it seals itself within 30 minutes.
 
-
+### Usage - Azure encoding example
 - Setup the transform secrets engine. Note: this will transform sensitive IDs output from the `az` CLI tool and Vault's Azure dynamic secrets engine.
 ```
 # Secret engine
@@ -52,10 +52,10 @@ vault write transform/transformation/azure \
         type=fpe \
         template=azure_template \
         tweak_source=internal \
-        allowed_roles='azure_role'
+        allowed_roles='azure-role'
 
 # Create role
-vault write transform/role/azure_role transformations=azure
+vault write transform/role/azure-role transformations=azure
 ```
 
 - Use transform.py to transform `az` outputs. 
@@ -86,10 +86,51 @@ $ az account list | python3 transform.py -t
 ... <remaining output omitted>
 ```
 
+### Usage - AWS encoding example
+- Setup the transform secrets engine. This will transform AWS access key and secret key Vault's AWS dynamic secrets engine.
+```
+# Secret engine
+vault secrets enable transform
+
+# Create alphabet
+vault write transform/alphabet/aws_creds \
+  alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890+/"
+
+# Create template
+vault write transform/template/aws_template type=regex \
+        pattern="([A-Za-z0-9/\+]+)" \
+        alphabet=aws_creds
+
+# Create transformation
+vault write transform/transformation/aws \
+        type=fpe \
+        template=aws_template \
+        tweak_source=internal \
+        allowed_roles='aws-role'
+
+# Create role
+vault write transform/role/aws-role transformations=aws
+```
+
+- Use transform.py to transform `vault read aws/creds/my-role` output: 
+```
+$ vault read aws/creds/my-role | python3 transform.py -aws
+Key                Value
+---                -----
+lease_id           aws/creds/my-role/UYWB750XeZapSebT8JpVgm9i
+lease_duration     5m
+lease_renewable    true
+access_key         vault:fpe:3bueYHWGnJt2G9ScvP03
+secret_key         vault:fpe:WSTvUzZG5h9lzPqc9DubndXX1y/z92cuE5FP2YD+
+security_token     <nil>
+```
+
+
 ### Usage - decoding example
+Note: Decoding 
 To decode a previously encoded outputs, please save the encoded output above into a file (E.g. az.txt). then run the same process with the `-d` parameter as shown below.
 ```
-$ az account list | python3 transform.py -t > az.txt
+$ az account list | python3 transform.py -az > az.txt
 $ cat az.txt | python3 transform.py -d
 ... <output omitted>
 ```
