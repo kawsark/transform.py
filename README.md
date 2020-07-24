@@ -127,8 +127,8 @@ security_token     <nil>
 
 
 ### Usage - decoding example
-Note: Decoding 
-To decode a previously encoded outputs, please save the encoded output above into a file (E.g. az.txt). then run the same process with the `-d` parameter as shown below.
+Note: Decoding is not supported for AWS yet.
+To decode previously encoded outputs, please save the encoded output above into a file (E.g. az.txt). then run the same process with the `-d` parameter as shown below.
 ```
 $ az account list | python3 transform.py -az > az.txt
 $ cat az.txt | python3 transform.py -d

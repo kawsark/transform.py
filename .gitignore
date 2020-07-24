@@ -1,8 +1,9 @@
+# Misc
+*.txt
+*.json
+
 # Emacs
 *~
-
-# txt files
-*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
