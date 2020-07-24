@@ -1,18 +1,30 @@
 setup_azure:
-	vault write transform/template/azure_template type=regex \
-			pattern="([a-z0-9]+)-([a-z0-9]+)-([a-z0-9]+)-([a-z0-9]+)-([a-z0-9]+)" \
-			alphabet=builtin/alphanumericlower
+	vault write transform/template/azure-template type=regex \
+		pattern="([a-z0-9]+)-([a-z0-9]+)-([a-z0-9]+)-([a-z0-9]+)-([a-z0-9]+)" \
+		alphabet=builtin/alphanumericlower
+	
+	vault write transform/template/azure-client-secret-template type=regex \
+		pattern="([A-Za-z0-9]+)" \
+		alphabet=builtin/alphanumeric
 
 setup_azure_fpe: setup_azure
 	vault delete transform/role/azure-role
 	vault delete transform/transformation/azure
+	vault delete transform/transformation/azure-client-secret
+
 	vault write transform/transformation/azure \
         type=fpe \
         template=azure_template \
         tweak_source=internal \
         allowed_roles='azure-role'
+	
+	vault write transform/transformation/azure-client-secret \
+        type=fpe \
+        template=azure-client-secret-template \
+        tweak_source=internal \
+        allowed_roles='azure-role'
 
-	vault write transform/role/azure-role transformations=azure
+	vault write transform/role/azure-role transformations=azure,azure-client-secret
 
 setup_azure_masking: setup_azure
 	vault delete transform/role/azure-role

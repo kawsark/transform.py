@@ -19,6 +19,7 @@ hits = 0
 
 # transformation
 decode = False
+mode = "azure"
 transformation = "azure"
 role = "azure-role"
 
@@ -34,7 +35,7 @@ decode_cmd = os.getenv('DECODE_CMD',"vault write -format=json transform/decode/{
 def main():
     global logger
     global decode
-    global transformation
+    global mode
     global role
     
     # Process arguments
@@ -44,9 +45,9 @@ def main():
 
     # Process transformations
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-az", "--azure", help="Apply transformation for Azure", action="store_true")
-    group.add_argument("-aws", "--aws", help="Apply transformation for AWS", action="store_true")
-    group.add_argument("-gcp", "--gcp", help="Apply transformation for GCP", action="store_true")
+    group.add_argument("-az", "--azure", help="Apply transformation(s) for Azure", action="store_true")
+    group.add_argument("-aws", "--aws", help="Apply transformation(s) for AWS", action="store_true")
+    group.add_argument("-gcp", "--gcp", help="Apply transformation(s) for GCP", action="store_true")
 
     args = parser.parse_args()
 
@@ -59,25 +60,29 @@ def main():
         if args.aws:
             print("Sorry AWS decode is not supported yet.")
 
-    # Set transformation
+    # Set mode
     if args.aws:
-        transformation = "aws"
+        mode = "aws"
     elif args.gcp:
-        transformation = "gcp"
+        mode = "gcp"
         print("Sorry gcp is not supported yet.")
     else:
-        transformation = "azure"
+        mode = "azure"
     
-    role = transformation + "-role"
-    regex_list = regex.get_regex(transformation)
-
-    logger.debug("Using Role: %s and Transformation: %s" % (role,transformation))
-    logger.debug("Using Regex: %s" % (regex_list))
+    role = mode + "-role"
+    
+    transformation_list = regex.get_transformations(mode)
+    regex_list = regex.get_regex(mode)
+    logger.debug("Using Mode %s, with Transformations: %s, and Regex: %s" % (mode,transformation_list,regex_list))
 
     global hits
+    global transformation
     input_str = sys.stdin.read()
-
-    for r in regex_list:
+    i = 0
+    for t in transformation_list:
+        transformation = t
+        r = regex_list[i]
+        i = i + 1
         if not decode:
             input_str = re.sub(r,encode_str,input_str,flags=re.DOTALL) # Encode
         else:
@@ -93,6 +98,7 @@ def encode_str(m):
     global hits
     global prefix
     global transformation
+    global mode
     global role
     hits += 1
 
@@ -106,9 +112,10 @@ def encode_str(m):
     results = []
 
     # Need to split a long string into two parts
-    if transformation == "aws" and (len(target) > 25):
-        d = int(len(target) / 2)
-        values = [target[:d],target[d:]]
+    if transformation == "aws" or transformation == "azure-client-secret":
+        if (len(target) > 25):
+            d = int(len(target) / 2)
+            values = [target[:d],target[d:]]
 
     error = False
     for value in values:
@@ -134,7 +141,7 @@ def encode_str(m):
         result = masked
     else:
         result = ''.join(results)
-        if transformation == "aws":
+        if transformation == "aws" or transformation == "azure-client-secret":
             x = m[0]
             i = int(len(x)-len(result))
             result = ''.join([x[:i],prefix,result])

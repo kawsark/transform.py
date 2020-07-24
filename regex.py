@@ -2,21 +2,22 @@ import os
 
 # Define a dict containing Regular Expressions for different crednetial types
 regex_dict = {
-    "azure":['([a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+)'],
+    "azure":['([a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-[a-z0-9]+)','client_secret["\s:]+([\w/\+]+)'],
     "aws":['access_key["\s:]+([\w]+)','secret_key["\s:]+([\w/\+]+)'],
     "gcp":[""]
 }
 
-role_dict = {
-    "azure":["azure-role"],
-    "aws":["aws-role","aws-role"],
+transformation_dict = {
+    "azure":["azure","azure-client-secret"],
+    "aws":["aws","aws"],
     "gcp":[""]
 }
 
-def get_regex(transformation):
-    regex = os.getenv('REGEX',None)
-    if not regex:
-        return regex_dict[transformation]
+# For these transformations, split the value into two
+split_values = ["aws","azure-client-secret"]
 
-def get_role_dict():
-    return role_dict
+def get_regex(mode):
+    return regex_dict[mode]
+
+def get_transformations(mode):
+    return transformation_dict[mode]
