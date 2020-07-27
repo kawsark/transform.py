@@ -60,7 +60,7 @@ def main():
         if args.aws:
             print("Sorry AWS decode is not supported yet.")
 
-    # Set mode
+    # Set mode. The corresponding Regular expression and transformations will be loaded from regex.py
     if args.aws:
         mode = "aws"
     elif args.gcp:
@@ -78,21 +78,24 @@ def main():
     global hits
     global transformation
     input_str = sys.stdin.read()
+
     i = 0
     for t in transformation_list:
         transformation = t
         r = regex_list[i]
         i = i + 1
         if not decode:
+            logger.debug("Regex: %s, Input: %s" % (r,input_str))
             input_str = re.sub(r,encode_str,input_str,flags=re.DOTALL) # Encode
         else:
             global prefix
             input_str = input_str.replace(prefix,'') # Remove prefix
             input_str = re.sub(r,decode_str,input_str,flags=re.DOTALL) # Decode
     
-    logger.debug("Transformed %d times" % hits)        
+    logger.debug("Transformed %d times" % hits)
     print(input_str)
 
+# This function will be called for each substitution
 def encode_str(m):
     global logger
     global hits
@@ -111,11 +114,12 @@ def encode_str(m):
     values = [target]
     results = []
 
-    # Need to split a long string into two parts
-    if transformation == "aws" or transformation == "azure-client-secret":
-        if (len(target) > 25):
-            d = int(len(target) / 2)
-            values = [target[:d],target[d:]]
+    # Check if the transformation requires splitting
+    split_values = transformation in regex.get_split_values()
+    if split_values:
+        logger.debug("Splitting value for transformation: %s, length %d" % (transformation,len(target)))
+        d = int(len(target) / 2)
+        values = [target[:d],target[d:]]
 
     error = False
     for value in values:
@@ -141,7 +145,7 @@ def encode_str(m):
         result = masked
     else:
         result = ''.join(results)
-        if transformation == "aws" or transformation == "azure-client-secret":
+        if split_values:
             x = m[0]
             i = int(len(x)-len(result))
             result = ''.join([x[:i],prefix,result])
