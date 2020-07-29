@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import sys
 import subprocess
@@ -32,12 +34,13 @@ encode_cmd = os.getenv('ENCODE_CMD',"vault write -format=json transform/encode/{
 # Decode command
 decode_cmd = os.getenv('DECODE_CMD',"vault write -format=json transform/decode/{0} value={1} transformation={2}")
 
+
 def main():
     global logger
     global decode
     global mode
     global role
-    
+
     # Process arguments
     parser = argparse.ArgumentParser(description='Encode or Decode using HashiCorp vault transform secrets engine.')
     parser.add_argument("-v", "--verbose", help="Enable verbose logging", action="store_true")
@@ -68,12 +71,12 @@ def main():
         print("Sorry gcp is not supported yet.")
     else:
         mode = "azure"
-    
+
     role = mode + "-role"
-    
+
     transformation_list = regex.get_transformations(mode)
     regex_list = regex.get_regex(mode)
-    logger.debug("Using Mode %s, with Transformations: %s, and Regex: %s" % (mode,transformation_list,regex_list))
+    logger.debug("Using Mode %s, with Transformations: %s, and Regex: %s", mode, transformation_list, regex_list)
 
     global hits
     global transformation
@@ -85,15 +88,16 @@ def main():
         r = regex_list[i]
         i = i + 1
         if not decode:
-            logger.debug("Regex: %s, Input: %s" % (r,input_str))
-            input_str = re.sub(r,encode_str,input_str,flags=re.DOTALL) # Encode
+            logger.debug("Regex: %s, Input: %s", r, input_str)
+            input_str = re.sub(r, encode_str, input_str, flags=re.DOTALL)  # Encode
         else:
             global prefix
-            input_str = input_str.replace(prefix,'') # Remove prefix
-            input_str = re.sub(r,decode_str,input_str,flags=re.DOTALL) # Decode
-    
-    logger.debug("Transformed %d times" % hits)
+            input_str = input_str.replace(prefix, '')  # Remove prefix
+            input_str = re.sub(r, decode_str, input_str, flags=re.DOTALL)  # Decode
+
+    logger.debug("Transformed %d times", hits)
     print(input_str)
+
 
 # This function will be called for each substitution
 def encode_str(m):
@@ -108,8 +112,8 @@ def encode_str(m):
     target = m[1]
 
     # Create masked value in case vault throws an error
-    l = ['#' for i in range(len(target))]
-    masked = ''.join(l)
+    mval = ['#' for i in range(len(target))]
+    masked = ''.join(mval)
 
     values = [target]
     results = []
@@ -117,14 +121,14 @@ def encode_str(m):
     # Check if the transformation requires splitting
     split_values = transformation in regex.get_split_values()
     if split_values:
-        logger.debug("Splitting value for transformation: %s, length %d" % (transformation,len(target)))
+        logger.debug("Splitting value for transformation: %s, length %d", transformation, len(target))
         d = int(len(target) / 2)
-        values = [target[:d],target[d:]]
+        values = [target[:d], target[d:]]
 
     error = False
     for value in values:
-        cmd = encode_cmd.format(role,value,transformation)
-        logger.debug(encode_cmd.format(role,'{masked}',transformation))
+        cmd = encode_cmd.format(role, value, transformation)
+        logger.debug(encode_cmd.format(role, '{masked}', transformation))
 
         process = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         stdout, stderr = process.communicate()
@@ -135,10 +139,10 @@ def encode_str(m):
                 results.append(j["data"]["encoded_value"])
             else:
                 error = True
-                logger.error('Unexpected output from vault %s' % j)            
+                logger.error('Unexpected output from vault %s', j)
         else:
             error = True
-            logger.error('Received errors from command %s: %s' % (cmd, stderr))
+            logger.error('Received errors from command %s: %s', cmd, stderr)
 
     if error:
         logger.warning('Defaulting to masking')
@@ -147,12 +151,13 @@ def encode_str(m):
         result = ''.join(results)
         if split_values:
             x = m[0]
-            i = int(len(x)-len(result))
-            result = ''.join([x[:i],prefix,result])
+            i = int(len(x) - len(result))
+            result = ''.join([x[:i], prefix, result])
         else:
-            result = '{}{}'.format(prefix,result)
+            result = '{}{}'.format(prefix, result)
 
     return result
+
 
 def decode_str(m):
     global logger
@@ -164,25 +169,24 @@ def decode_str(m):
     # m.group(0) should contain the value to be decoded
     value = m.group(0)
 
-    cmd = decode_cmd.format(role,value,transformation)
-    logger.debug(decode_cmd.format(role,value,transformation))
-    
+    cmd = decode_cmd.format(role, value, transformation)
+    logger.debug(decode_cmd.format(role, value, transformation))
+
     process = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     stdout, stderr = process.communicate()
     error = False
-    
+
     if process.returncode == 0:
         j = json.loads(stdout)
         if "data" in j and "decoded_value" in j["data"]:
             v = j["data"]["decoded_value"]
         else:
             error = True
-            logger.error('Unexpected output from vault %s' % j)            
+            logger.error('Unexpected output from vault %s', j)
     else:
         error = True
-        logger.error('Received errors from command %s: %s' % (cmd, stderr))
+        logger.error('Received errors from command %s: %s', cmd, stderr)
 
-            
     if error:
         logger.warning('Could not decode, returning original string')
         v = value
