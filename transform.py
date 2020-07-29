@@ -27,13 +27,13 @@ transformation = "azure"
 role = "azure-role"
 
 # Prefix
-prefix = os.getenv('PREFIX','')
+prefix = os.getenv('PREFIX', '')
 
 # Encode command
-encode_cmd = os.getenv('ENCODE_CMD',"vault write -format=json transform/encode/{0} value={1} transformation={2}")
+encode_cmd = os.getenv('ENCODE_CMD', "vault write -format=json transform/encode/{0} value={1} transformation={2}")
 
 # Decode command
-decode_cmd = os.getenv('DECODE_CMD',"vault write -format=json transform/decode/{0} value={1} transformation={2}")
+decode_cmd = os.getenv('DECODE_CMD', "vault write -format=json transform/decode/{0} value={1} transformation={2}")
 
 
 def main():
