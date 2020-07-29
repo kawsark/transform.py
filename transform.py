@@ -7,7 +7,8 @@ import re
 import logging
 import json
 import argparse
-import regex
+from regex import regex_dict, transformation_dict, split_values_list
+
 
 # Create logger: https://docs.python.org/3/howto/logging.html#configuring-logging
 logger = logging.getLogger(__name__)
@@ -74,8 +75,8 @@ def main():
 
     role = mode + "-role"
 
-    transformation_list = regex.get_transformations(mode)
-    regex_list = regex.get_regex(mode)
+    transformation_list = transformation_dict[mode]
+    regex_list = regex_dict[mode]
     logger.debug("Using Mode %s, with Transformations: %s, and Regex: %s", mode, transformation_list, regex_list)
 
     global hits
@@ -119,7 +120,7 @@ def encode_str(m):
     results = []
 
     # Check if the transformation requires splitting
-    split_values = transformation in regex.get_split_values()
+    split_values = transformation in split_values_list
     if split_values:
         logger.debug("Splitting value for transformation: %s, length %d", transformation, len(target))
         d = int(len(target) / 2)
