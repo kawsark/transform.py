@@ -1,11 +1,13 @@
 # transform.py
+
 A wrapper for the HashiCorp Vault transform secrets engine
 
-This repository is a wrapper around the [Vault Transform Secrets Engine](https://www.vaultproject.io/docs/secrets/transform) to transform sensitive values such as credentials or account IDs when performing demos. Below is an example for Azure. All the values prefixed with `vault:fpe:` have been transformed using Vault Format Preserving Encryption. 
+This repository is a wrapper around the [Vault Transform Secrets Engine](https://www.vaultproject.io/docs/secrets/transform) to transform sensitive values such as credentials or account IDs when performing demos. Below is an example for Azure. All the values prefixed with `vault:fpe:` have been transformed using Vault Format Preserving Encryption.
 
 Example output:
-```
-$ az account list | python3 transform.py -v -t
+
+```sh
+$ az account list | python3 transform.py -v -d
  {
     "cloudName": "AzureCloud",
     "homeTenantId": "vault:fpe:jkqyhelg-1j6p-b1aw-lqru-x04xd45f69q3",
@@ -29,16 +31,21 @@ $ az account list | python3 transform.py -v -t
   }
 ```
 
-### Running Vault
+## Running Vault
+
 - Please download and unzip a Vault binary with minimum version 1.4 with the `+ent` suffix. These are available for download at [releases page](https://releases.hashicorp.com/vault/). Start the Vault server in dev mode on one terminal.
-```
+
+```dh
 vault server -dev
 ```
+
 - Note: The Transform Secrets Engine is an Enterprise feature, therefore a valid Enterprise license will need to be applied to run a server beyond the it seals itself within 30 minutes.
 
-### Usage - Azure encoding example
+## Usage - Azure encoding example
+
 - Setup the transform secrets engine. Note: this will transform sensitive IDs output from the `az` CLI tool and Vault's Azure dynamic secrets engine.
-```
+
+```sh
 # Secret engine
 vault secrets enable transform
 
@@ -58,10 +65,11 @@ vault write transform/transformation/azure \
 vault write transform/role/azure-role transformations=azure
 ```
 
-- Use transform.py to transform `az` outputs. 
-```
+- Use transform.py to transform `az` outputs
+
+```sh
 $ git clone https://github.com/kawsark/transform.py.git && cd transform.py
-$ az account list | python3 transform.py -t
+$ az account list | python3 transform.py -v
  {
     "cloudName": "AzureCloud",
     "homeTenantId": "vault:fpe:jkqyhelg-1j6p-b1aw-lqru-x04xd45f69q3",
@@ -86,9 +94,11 @@ $ az account list | python3 transform.py -t
 ... <remaining output omitted>
 ```
 
-### Usage - AWS encoding example
+## Usage - AWS encoding example
+
 - Setup the transform secrets engine. This will transform AWS access key and secret key Vault's AWS dynamic secrets engine.
-```
+
+```sh
 # Secret engine
 vault secrets enable transform
 
@@ -112,8 +122,9 @@ vault write transform/transformation/aws \
 vault write transform/role/aws-role transformations=aws
 ```
 
-- Use transform.py to transform `vault read aws/creds/my-role` output: 
-```
+- Use transform.py to transform `vault read aws/creds/my-role` output:
+
+```sh
 $ vault read aws/creds/my-role | python3 transform.py -aws
 Key                Value
 ---                -----
@@ -125,16 +136,19 @@ secret_key         vault:fpe:WSTvUzZG5h9lzPqc9DubndXX1y/z92cuE5FP2YD+
 security_token     <nil>
 ```
 
-### Usage - decoding example
+## Usage - decoding example
+
 Note: Decoding is not supported for AWS yet.
 To decode previously encoded outputs, please save the encoded output above into a file (E.g. az.txt). then run the same process with the `-d` parameter as shown below.
-```
+
+```sh
 $ az account list | python3 transform.py -az > az.txt
 $ cat az.txt | python3 transform.py -d
 ... <output omitted>
 ```
 
-### Masking example
+## Masking example
+
 To mask credentials, modify the transformation to be of type `type=masking` as shown below:
 ```
 vault delete transform/role/aws-role transformations=aws
@@ -150,9 +164,11 @@ vault write transform/transformation/aws \
 vault write transform/role/aws-role transformations=aws
 ```
 
-### Bash functions
+## Bash functions
+
 To encode or decode individual fields, you can use the handy bash functions in bash_functions.sh. Examples shown below:
-```
+
+```sh
 source bash_functions.sh
 $ az_encode 8mh6dgj5-xhjy-y6vh-mxa3-t1fegorvoiqk
 k8dzlity-11nc-f4pd-dss2-w6yi6s5rzobz
@@ -161,10 +177,12 @@ $ az_decode k8dzlity-11nc-f4pd-dss2-w6yi6s5rzobz
 8mh6dgj5-xhjy-y6vh-mxa3-t1fegorvoiqk
 ```
 
-### Verbose mode
+## Verbose mode
+
 The `-v` parameter can be used to enable verbose mode and show the underlying vault commands, as well as indicate how many times an encoding or decoding operation took place:
-```
-$ az account list | python3 transform.py -v -t
+
+```sh
+$ az account list | python3 transform.py -v -d
 DEBUG: Enabled transform
 DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
 DEBUG: vault write -format=json transform/encode/local value={masked} transformation=azure
